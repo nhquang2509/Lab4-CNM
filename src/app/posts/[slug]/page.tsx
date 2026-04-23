@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { CommentForm } from '@/components/posts/comment-form'
 import { RealtimeComments } from '@/components/posts/realtime-comments'
+import { LikeButton } from '@/components/posts/like-button'
 
 interface PostPageProps {
   params: Promise<{ slug: string }>
@@ -56,6 +57,22 @@ export default async function PostPage({ params }: PostPageProps) {
   // Kiểm tra user đã đăng nhập chưa
   const { data: { user } } = await supabase.auth.getUser()
 
+  // Lấy tổng số likes và trạng thái like của user hiện tại
+  const [{ count: likeCount }, { data: userLike }] = await Promise.all([
+    supabase
+      .from('likes')
+      .select('*', { count: 'exact', head: true })
+      .eq('post_id', post.id),
+    user
+      ? supabase
+          .from('likes')
+          .select('post_id')
+          .eq('post_id', post.id)
+          .eq('user_id', user.id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ])
+
   return (
     <main className="max-w-3xl mx-auto px-4 py-8">
       <article>
@@ -77,10 +94,20 @@ export default async function PostPage({ params }: PostPageProps) {
           </div>
         </header>
 
-        <div className="prose prose-lg max-w-none mb-12">
+        <div className="prose prose-lg max-w-none mb-8">
           {post.content?.split('\n').map((paragraph: string, index: number) => (
             <p key={index}>{paragraph}</p>
           ))}
+        </div>
+
+        {/* Like Button */}
+        <div className="flex items-center gap-4 mb-4">
+          <LikeButton
+            postId={post.id}
+            initialLikeCount={likeCount ?? 0}
+            initialLiked={!!userLike}
+            isLoggedIn={!!user}
+          />
         </div>
       </article>
 
