@@ -7,13 +7,7 @@ export default async function HomePage() {
   // Lấy bài viết đã publish, kèm thông tin author
   const { data: posts, error } = await supabase
     .from('posts')
-    .select(`
-      *,
-      profiles (
-        display_name,
-        avatar_url
-      )
-    `)
+    .select('*')
     .eq('status', 'published')
     .order('published_at', { ascending: false })
 
@@ -44,7 +38,7 @@ export default async function HomePage() {
 
               <div className="flex items-center gap-4 mt-4 text-sm text-gray-500">
                 <span>
-                  Bởi {post.profiles?.display_name || 'Ẩn danh'}
+                  Bởi {(post as any).profiles?.display_name || 'Ẩn danh'}
                 </span>
                 <span>•</span>
                 <span>

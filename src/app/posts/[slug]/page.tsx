@@ -3,16 +3,17 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 
 interface PostPageProps {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }
 
 export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
+  const { slug } = await params
   const supabase = await createClient()
 
   const { data: post } = await supabase
     .from('posts')
     .select('title, excerpt')
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .eq('status', 'published')
     .single()
 
@@ -23,18 +24,13 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
 }
 
 export default async function PostPage({ params }: PostPageProps) {
+  const { slug } = await params
   const supabase = await createClient()
 
   const { data: post, error } = await supabase
     .from('posts')
-    .select(`
-      *,
-      profiles (
-        display_name,
-        avatar_url
-      )
-    `)
-    .eq('slug', params.slug)
+    .select('*')
+    .eq('slug', slug)
     .eq('status', 'published')
     .single()
 
@@ -49,7 +45,7 @@ export default async function PostPage({ params }: PostPageProps) {
           <h1 className="text-4xl font-bold mb-4">{post.title}</h1>
 
           <div className="flex items-center gap-4 text-gray-500">
-            <span>Bởi {post.profiles?.display_name || 'Ẩn danh'}</span>
+            <span>Bởi {(post as any).profiles?.display_name || 'Ẩn danh'}</span>
             <span>•</span>
             <time>
               {post.published_at

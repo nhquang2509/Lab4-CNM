@@ -3,10 +3,11 @@ import { redirect, notFound } from 'next/navigation'
 import { PostForm } from '@/components/dashboard/post-form'
 
 interface EditPostPageProps {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 export default async function EditPostPage({ params }: EditPostPageProps) {
+  const { id } = await params
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -18,7 +19,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
   const { data: post, error } = await supabase
     .from('posts')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('author_id', user.id) // Chỉ cho phép edit bài của mình
     .single()
 

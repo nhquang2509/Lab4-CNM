@@ -15,11 +15,30 @@ export function PostForm({ post }: PostFormProps) {
   const isEditing = !!post
 
   const [title, setTitle] = useState(post?.title || '')
+  const [slug, setSlug] = useState(post?.slug || '')
   const [content, setContent] = useState(post?.content || '')
   const [excerpt, setExcerpt] = useState(post?.excerpt || '')
   const [status, setStatus] = useState<PostStatus>(post?.status || 'draft')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+
+  const generateSlug = (text: string) =>
+    text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+
+  const handleTitleChange = (value: string) => {
+    setTitle(value)
+    if (!isEditing) {
+      setSlug(generateSlug(value))
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -36,6 +55,7 @@ export function PostForm({ post }: PostFormProps) {
 
       const postData = {
         title,
+        slug: slug || generateSlug(title),
         content,
         excerpt,
         status,
@@ -85,11 +105,27 @@ export function PostForm({ post }: PostFormProps) {
           id="title"
           type="text"
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={(e) => handleTitleChange(e.target.value)}
           required
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
           placeholder="Nhập tiêu đề bài viết"
         />
+      </div>
+
+      <div>
+        <label htmlFor="slug" className="block text-sm font-medium text-gray-700">
+          Slug (URL) <span className="text-red-500">*</span>
+        </label>
+        <input
+          id="slug"
+          type="text"
+          value={slug}
+          onChange={(e) => setSlug(e.target.value)}
+          required
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+          placeholder="url-bai-viet-cua-ban"
+        />
+        <p className="mt-1 text-xs text-gray-500">Tự động tạo từ tiêu đề. Có thể chỉnh sửa thủ công.</p>
       </div>
 
       <div>
