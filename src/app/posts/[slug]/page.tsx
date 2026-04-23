@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { CommentForm } from '@/components/posts/comment-form'
 import { RealtimeComments } from '@/components/posts/realtime-comments'
 import { LikeButton } from '@/components/posts/like-button'
+import ReactMarkdown from 'react-markdown'
 
 interface PostPageProps {
   params: Promise<{ slug: string }>
@@ -95,9 +96,20 @@ export default async function PostPage({ params }: PostPageProps) {
         </header>
 
         <div className="prose prose-lg max-w-none mb-8">
-          {post.content?.split('\n').map((paragraph: string, index: number) => (
-            <p key={index}>{paragraph}</p>
-          ))}
+          <ReactMarkdown
+            components={{
+              img: ({ src, alt }) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={src}
+                  alt={alt || ''}
+                  className="rounded-lg max-w-full h-auto my-4"
+                />
+              ),
+            }}
+          >
+            {post.content || ''}
+          </ReactMarkdown>
         </div>
 
         {/* Like Button */}

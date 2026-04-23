@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Post, PostStatus } from '@/types/database'
+import { ImageUploader } from './image-uploader'
 
 interface PostFormProps {
   post?: Post
@@ -21,6 +22,25 @@ export function PostForm({ post }: PostFormProps) {
   const [status, setStatus] = useState<PostStatus>(post?.status || 'draft')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  const insertAtCursor = (text: string) => {
+    const textarea = textareaRef.current
+    if (!textarea) {
+      setContent((prev) => prev + '\n' + text)
+      return
+    }
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const newContent = content.substring(0, start) + '\n' + text + '\n' + content.substring(end)
+    setContent(newContent)
+    // Restore cursor position after the inserted text
+    requestAnimationFrame(() => {
+      textarea.selectionStart = start + text.length + 2
+      textarea.selectionEnd = start + text.length + 2
+      textarea.focus()
+    })
+  }
 
   const generateSlug = (text: string) =>
     text
@@ -143,18 +163,22 @@ export function PostForm({ post }: PostFormProps) {
       </div>
 
       <div>
-        <label htmlFor="content" className="block text-sm font-medium text-gray-700">
-          Nội dung
-        </label>
+        <div className="flex items-center justify-between mb-1">
+          <label htmlFor="content" className="block text-sm font-medium text-gray-700">
+            Nội dung
+          </label>
+          <ImageUploader onInsert={insertAtCursor} />
+        </div>
         <textarea
+          ref={textareaRef}
           id="content"
           value={content}
           onChange={(e) => setContent(e.target.value)}
           rows={15}
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 font-mono"
+          className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 font-mono"
           placeholder="Viết nội dung bài viết của bạn..."
         />
-        <p className="mt-1 text-xs text-gray-500">Hỗ trợ Markdown</p>
+        <p className="mt-1 text-xs text-gray-500">Hỗ trợ Markdown. Dùng nút &quot;Chèn ảnh&quot; để upload và chèn ảnh vào nội dung.</p>
       </div>
 
       <div>
