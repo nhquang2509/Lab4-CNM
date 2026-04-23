@@ -1,6 +1,8 @@
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { logout } from '@/app/actions/auth'
+import { SearchBox } from './search-box'
 
 export async function Header() {
   const supabase = await createClient()
@@ -13,6 +15,12 @@ export async function Header() {
           <Link href="/" className="text-xl font-bold text-gray-900">
             Simple Blog
           </Link>
+
+          {/* Search Box */}
+          <Suspense fallback={<div className="w-44 h-8 bg-gray-100 rounded-md animate-pulse" />}>
+            <SearchBox />
+          </Suspense>
+
           <nav className="flex items-center gap-4">
             <Link href="/" className="text-gray-600 hover:text-gray-900">
               Trang chủ
