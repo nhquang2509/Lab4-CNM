@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
+import { CommentForm } from '@/components/posts/comment-form'
+import { RealtimeComments } from '@/components/posts/realtime-comments'
 
 interface PostPageProps {
   params: Promise<{ slug: string }>
@@ -38,6 +40,22 @@ export default async function PostPage({ params }: PostPageProps) {
     notFound()
   }
 
+  // Lấy comments kèm thông tin author
+  const { data: comments } = await supabase
+    .from('comments')
+    .select(`
+      *,
+      profiles (
+        display_name,
+        avatar_url
+      )
+    `)
+    .eq('post_id', post.id)
+    .order('created_at', { ascending: true })
+
+  // Kiểm tra user đã đăng nhập chưa
+  const { data: { user } } = await supabase.auth.getUser()
+
   return (
     <main className="max-w-3xl mx-auto px-4 py-8">
       <article>
@@ -59,13 +77,34 @@ export default async function PostPage({ params }: PostPageProps) {
           </div>
         </header>
 
-        <div className="prose prose-lg max-w-none">
-          {/* Render markdown content */}
+        <div className="prose prose-lg max-w-none mb-12">
           {post.content?.split('\n').map((paragraph: string, index: number) => (
             <p key={index}>{paragraph}</p>
           ))}
         </div>
       </article>
+
+      {/* Comments Section */}
+      <section className="border-t pt-8">
+        <h2 className="text-2xl font-bold mb-6">
+          Bình luận ({comments?.length || 0})
+        </h2>
+
+        {user ? (
+          <div className="mb-8">
+            <CommentForm postId={post.id} />
+          </div>
+        ) : (
+          <p className="text-gray-500 mb-8">
+            <a href="/login" className="text-blue-600 hover:text-blue-500">
+              Đăng nhập
+            </a>
+            {' '}để bình luận.
+          </p>
+        )}
+
+        <RealtimeComments postId={post.id} initialComments={comments || []} />
+      </section>
     </main>
   )
 }
