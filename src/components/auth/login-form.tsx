@@ -116,6 +116,11 @@ export function LoginForm() {
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             placeholder="••••••••"
           />
+          <div className="mt-1 text-right">
+            <Link href="/forgot-password" className="text-xs text-blue-600 hover:text-blue-500">
+              Quên mật khẩu?
+            </Link>
+          </div>
         </div>
         <button
           type="submit"
